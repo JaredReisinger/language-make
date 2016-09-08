@@ -16,58 +16,48 @@
 'firstLineMatch': '^#!\\s*/.*\\bmake\\s+-f'
 'patterns': [
   {
+    'include': '#directive'
+  }
+  {
     'include': '#comment'
   }
   {
     'include': '#variable-assignment'
   }
   {
-    'include': '#variables'
+    'include': '#rule'
   }
   {
     'include': '#recipe'
   }
-  {
-    'include': '#directives'
-  }
 ]
 'repository':
   'comment':
-    'begin': '(^[ \\t]+)?(?=#)'
+    'begin': '#'
     'beginCaptures':
-      '1':
-        'name': 'punctuation.whitespace.comment.leading.makefile'
-    'end': '(?!\\G)'
+      '0':
+        'name': 'punctuation.definition.comment.makefile'
+    'contentName': 'comment.line.number-sign.makefile'
+    'end': '(?=\\n)'
     'patterns': [
       {
-        'begin': '#'
-        'beginCaptures':
-          '0':
-            'name': 'punctuation.definition.comment.makefile'
-        'end': '\\n'
-        'name': 'comment.line.number-sign.makefile'
-        'patterns': [
-          {
-            'match': '\\\\\\n'
-            'name': 'constant.character.escape.continuation.makefile'
-          }
-        ]
+        'include': '#line-continuation'
       }
     ]
-  'directives':
+  'directive':
     'patterns': [
       {
-        'begin': '^[ ]*([s\\-]?include)\\b'
+        'begin': '^\\s*([s\\-]?include)\\b'
         'beginCaptures':
           '1':
             'name': 'keyword.control.include.makefile'
-        'end': '^'
+        'end': '(?=\\n)'
         'patterns': [
           {
             'include': '#comment'
           }
           {
-            'include': '#variables'
+            'include': '#variable'
           }
           {
             'match': '%'
@@ -76,17 +66,17 @@
         ]
       }
       {
-        'begin': '^[ ]*(vpath)\\b'
+        'begin': '^\\s*(vpath)\\b'
         'beginCaptures':
           '1':
             'name': 'keyword.control.vpath.makefile'
-        'end': '^'
+        'end': '(?=\\n)'
         'patterns': [
           {
             'include': '#comment'
           }
           {
-            'include': '#variables'
+            'include': '#variable'
           }
           {
             'match': '%'
@@ -105,12 +95,12 @@
             'name': 'variable.other.makefile'
           '4':
             'name': 'punctuation.separator.key-value.makefile'
-        'end': '^(endef)\\b'
+        'end': '^\\s*(endef)\\b'
         'name': 'meta.scope.conditional.makefile'
         'patterns': [
           {
             'begin': '\\G(?!\\n)'
-            'end': '^'
+            'end': '(?=\\n)'
             'patterns': [
               {
                 'include': '#comment'
@@ -118,7 +108,7 @@
             ]
           }
           {
-            'include': '#variables'
+            'include': '#variable'
           }
           {
             'include': '#comment'
@@ -126,11 +116,11 @@
         ]
       }
       {
-        'begin': '^[ ]*(export)\\b'
+        'begin': '^\\s*(export)\\b'
         'beginCaptures':
           '1':
             'name': 'keyword.control.$1.makefile'
-        'end': '^'
+        'end': '(?=\\n)'
         'patterns': [
           {
             'include': '#comment'
@@ -145,11 +135,11 @@
         ]
       }
       {
-        'begin': '^[ ]*(override|private)\\b'
+        'begin': '^\\s*(override|private)\\b'
         'beginCaptures':
           '1':
             'name': 'keyword.control.$1.makefile'
-        'end': '^'
+        'end': '(?=\\n)'
         'patterns': [
           {
             'include': '#comment'
@@ -160,11 +150,11 @@
         ]
       }
       {
-        'begin': '^[ ]*(unexport|undefine)\\b'
+        'begin': '^\\s*(unexport|undefine)\\b'
         'beginCaptures':
           '1':
             'name': 'keyword.control.$1.makefile'
-        'end': '^'
+        'end': '(?=\\n)'
         'patterns': [
           {
             'include': '#comment'
@@ -176,7 +166,7 @@
         ]
       }
       {
-        'begin': '^(ifdef|ifndef)\\s*([^\\s]+)(?=\\s)'
+        'begin': '^\\s*(ifdef|ifndef)\\s*([^\\s]+)(?=\\s)'
         'captures':
           '1':
             'name': 'keyword.control.$1.makefile'
@@ -184,12 +174,12 @@
             'name': 'variable.other.makefile'
           '3':
             'name': 'punctuation.separator.key-value.makefile'
-        'end': '^(endif)\\b'
+        'end': '^\\s*(endif)\\b'
         'name': 'meta.scope.conditional.makefile'
         'patterns': [
           {
             'begin': '\\G(?!\\n)'
-            'end': '^'
+            'end': '(?=\\n)'
             'patterns': [
               {
                 'include': '#comment'
@@ -197,25 +187,33 @@
             ]
           }
           {
+            # TODO: suport "else if..." style
+            'begin': '^\\s*else(?=\\s)'
+            'beginCaptures':
+              '0':
+                'name': 'keyword.control.else.makefile'
+            'end': '(?=\\n)'
+          }
+          {
             'include': '$self'
           }
         ]
       }
       {
-        'begin': '^(ifeq|ifneq)(?=\\s)'
+        'begin': '^\\s*(ifeq|ifneq)(?=\\s)'
         'captures':
           '1':
             'name': 'keyword.control.$1.makefile'
-        'end': '^(endif)\\b'
+        'end': '^\\s*(endif)\\b'
         'name': 'meta.scope.conditional.makefile'
         'patterns': [
           {
             'begin': '\\G'
-            'end': '^'
+            'end': '(?=\\n)'
             'name': 'meta.scope.condition.makefile'
             'patterns': [
               {
-                'include': '#variables'
+                'include': '#variable'
               }
               {
                 'include': '#comment'
@@ -223,11 +221,12 @@
             ]
           }
           {
-            'begin': '^else(?=\\s)'
+            # TODO: suport "else if..." style
+            'begin': '^\\s*else(?=\\s)'
             'beginCaptures':
               '0':
                 'name': 'keyword.control.else.makefile'
-            'end': '^'
+            'end': '(?=\\n)'
           }
           {
             'include': '$self'
@@ -235,168 +234,220 @@
         ]
       }
     ]
-  'interpolation':
-    'begin': '(?=`)'
-    'end': '(?!\\G)'
-    'name': 'meta.embedded.line.shell'
-    'patterns': [
-      {
-        'begin': '`'
-        'beginCaptures':
-          '0':
-            'name': 'punctuation.definition.string.makefile'
-        'contentName': 'source.shell'
-        'end': '(`)'
-        'endCaptures':
-          '0':
-            'name': 'punctuation.definition.string.makefile'
-          '1':
-            'name': 'source.shell'
-        'name': 'string.interpolated.backtick.makefile'
-        'patterns': [
-          {
-            'include': 'source.shell'
-          }
-        ]
-      }
-    ]
-  'recipe':
-    'begin': '^(?!\\t)([^:]*)(:)(?!\\=)'
+  'line-continuation':
+    'match': '\\\\\\n'
+    'name': 'constant.character.escape.continuation.makefile'
+  'rule':
+    # TODO: Handle static-pattern rules (:)?
+    # TODO: Handle order-only prerequisites (|)?
+    'begin': '^(?![ \\t])([^:]+)(:)'
     'beginCaptures':
       '1':
+        'name': 'meta.scope.target.entity.name.function.makefile'
         'patterns': [
           {
+            'match': '\\.(PHONY|SUFFIXES|DEFAULT|PRECIOUS|INTERMEDIATE|SECONDARY|SECONDEXPANSION|DELETE_ON_ERROR|IGNORE|LOW_RESOLUTION_TIME|SILENT|EXPORT_ALL_VARIABLES|NOTPARALLEL|ONESHELL|POSIX)'
             'captures':
               '1':
                 'name': 'support.function.target.$1.makefile'
-            'match': '^\\s*(\\.(PHONY|SUFFIXES|DEFAULT|PRECIOUS|INTERMEDIATE|SECONDARY|SECONDEXPANSION|DELETE_ON_ERROR|IGNORE|LOW_RESOLUTION_TIME|SILENT|EXPORT_ALL_VARIABLES|NOTPARALLEL|ONESHELL|POSIX))\\s*$'
           }
           {
-            'begin': '(?=\\S)'
-            'end': '(?=\\s|$)'
-            'name': 'entity.name.function.target.makefile'
-            'patterns': [
-              {
-                'include': '#variables'
-              }
-              {
-                'match': '%'
-                'name': 'constant.other.placeholder.makefile'
-              }
-            ]
-          }
-        ]
-      '2':
-        'name': 'punctuation.separator.key-value.makefile'
-    'end': '^(?!\\t)'
-    'name': 'meta.scope.target.makefile'
-    'patterns': [
-      {
-        'begin': '\\G'
-        'end': '\\n'
-        'name': 'meta.scope.prerequisites.makefile'
-        'patterns': [
-          {
-            'match': '\\\\\\n'
-            'name': 'constant.character.escape.continuation.makefile'
+            'include': '#variable'
           }
           {
-            'match': '%|\\*'
+            'match': '%'
             'name': 'constant.other.placeholder.makefile'
           }
-          {
-            'include': '#comment'
-          }
-          {
-            'include': '#variables'
-          }
         ]
+    'end': '(?=\\n)'
+    'patterns': [
+      {
+          'begin': '(;)'
+          'captures':
+            '1':
+              'name': 'punctuation.separator.rule-recipe.makefile'
+          'end': '(?=\\n)'
+          'patterns': [
+            {
+              'include': '#recipe'
+            }
+          ]
       }
       {
-        'begin': '^\\t'
-        'end': '$'
-        'name': 'meta.scope.recipe.makefile'
-        'patterns': [
-          {
-            'match': '\\\\\\n'
-            'name': 'constant.character.escape.continuation.makefile'
-          }
-          {
-            'include': '#variables'
-          }
-          {
-            'include': 'source.shell'
-          }
-        ]
+        'include': '#line-continuation'
+      }
+      {
+        'include': '#comment'
       }
     ]
+  'recipe':
+    'begin': '(\\G|^\\t)(@?)'
+    'beginCaptures':
+      '1':
+        'name': 'punctuation.whitespace.recipe.leading.makefile'
+      '2':
+        'name': 'constant.character.silent.makefile'
+    'end': '(?=\\n)'
+    'name': 'meta.scope.recipe.makefile'
+    'patterns': [
+      {
+        'include': '#comment'
+      }
+      {
+        'include': '#line-continuation'
+      }
+      {
+        'include': '#variable'
+      }
+      {
+        'match': '%|\\*'
+        'name': 'constant.other.placeholder.makefile'
+      }
+      {
+        'include': '#string'
+      }
+    ]
+  # 'xrecipe':
+  #   'begin': '^(?!\\t)([^:]*)(:)(?!\\=)'
+  #   'beginCaptures':
+  #     '1':
+  #       'patterns': [
+  #         {
+  #           'captures':
+  #             '1':
+  #               'name': 'support.function.target.$1.makefile'
+  #           'match': '^\\s*(\\.(PHONY|SUFFIXES|DEFAULT|PRECIOUS|INTERMEDIATE|SECONDARY|SECONDEXPANSION|DELETE_ON_ERROR|IGNORE|LOW_RESOLUTION_TIME|SILENT|EXPORT_ALL_VARIABLES|NOTPARALLEL|ONESHELL|POSIX))\\s*$'
+  #         }
+  #         {
+  #           'begin': '(?=\\S)'
+  #           'end': '(?=\\s|$)'
+  #           'name': 'entity.name.function.target.makefile'
+  #           'patterns': [
+  #             {
+  #               'include': '#variable'
+  #             }
+  #             {
+  #               'match': '%'
+  #               'name': 'constant.other.placeholder.makefile'
+  #             }
+  #           ]
+  #         }
+  #       ]
+  #     '2':
+  #       'name': 'punctuation.separator.key-value.makefile'
+  #   'end': '^(?!\\t)'
+  #   'name': 'meta.scope.target.makefile'
+  #   'patterns': [
+  #     {
+  #       'begin': '\\G'
+  #       'end': '\\n'
+  #       'name': 'meta.scope.prerequisites.makefile'
+  #       'patterns': [
+  #         {
+  #           'include': '#line-continuation'
+  #         }
+  #         {
+  #           'match': '%|\\*'
+  #           'name': 'constant.other.placeholder.makefile'
+  #         }
+  #         {
+  #           'include': '#comment'
+  #         }
+  #         {
+  #           'include': '#variable'
+  #         }
+  #       ]
+  #     }
+  #     {
+  #       'begin': '^\\t'
+  #       'end': '$'
+  #       'name': 'meta.scope.recipe.makefile'
+  #       'patterns': [
+  #         {
+  #           'include': '#line-continuation'
+  #         }
+  #         {
+  #           'include': '#variable'
+  #         }
+  #         {
+  #           'include': 'source.shell'
+  #         }
+  #       ]
+  #     }
+  #   ]
   'variable-assignment':
-    'begin': '(^[ ]*|\\G\\s*)([^\\s]+)\\s*(=|\\?=|:=|\\+=)'
+    'begin': '(^\\s*|\\G\\s*)([^\\s]+)\\s*(=|\\?=|:=|\\+=)'
     'beginCaptures':
       '2':
         'name': 'variable.other.makefile'
       '3':
         'name': 'punctuation.separator.key-value.makefile'
-    'end': '\\n'
+    'end': '(?=\\n)'
     'patterns': [
       {
-        'match': '\\\\\\n'
-        'name': 'constant.character.escape.continuation.makefile'
+        'include': '#line-continuation'
       }
       {
         'include': '#comment'
       }
       {
-        'include': '#variables'
+        'include': '#variable'
       }
+      # {
+      #  'include': '#interpolation'
+      # }
       {
-        'include': '#interpolation'
+        'include': '#string'
       }
     ]
-  'variables':
+  'variable-name':
     'patterns': [
       {
-        'captures':
-          '1':
-            'name': 'punctuation.definition.variable.makefile'
-        'match': '(\\$?\\$)[@%<?^+|*]'
+        'match': '\\G(MAKE(FILES|SHELL|LEVEL|FLAGS|CMDGOALS|FILE_LIST|_RESTARTS|_TERMOUT|_TERMERR)?|VPATH|SHELL|\\.SHELLFLAGS|CURDIR|SUFFIXES|\\.LIBPATTERNS|\\.DEFAULT_GOAL|\\.RECIPEPREFIX|\\.VARIABLES|\\.FEATURES|\\.INCLUDE_DIRS)'
         'name': 'variable.language.makefile'
       }
       {
-        'match': '\\b@\\w+@\\b'
-        'name': 'string.interpolated.makefile'
+        'match': '\\G\\w+'
+        'name': 'variable.other.makefile'
+      }
+    ]
+  'variable':
+    'patterns': [
+      {
+        'match': '\\$\\$'
+        'name':'constant.character.escape.dollar-sign.makefile'
       }
       {
-        'begin': '\\$?\\$\\('
+        # automatic variables
+        'match': '\\$[@%<?^+|*]'
+        'name':'variable.language.makefile'
+      }
+      {
+        'begin': '\\$\\('
         'captures':
           '0':
             'name': 'punctuation.definition.variable.makefile'
         'end': '\\)'
-        'name': 'string.interpolated.makefile'
         'patterns': [
           {
-            'include': 'source.shell#string'
-          }
-          {
-            'include': '#variables'
-          }
-          {
-            'match': '\\G(MAKEFILES|VPATH|SHELL|MAKESHELL|MAKE|MAKELEVEL|MAKEFLAGS|MAKECMDGOALS|CURDIR|SUFFIXES|\\.LIBPATTERNS)(?=\\s*\\))'
+            # automatic variable alternates
+            'match': '\\G([@*%<^+?][DF])'
             'name': 'variable.language.makefile'
           }
           {
-            'begin': '\\G(subst|patsubst|strip|findstring|filter(-out)?|sort|word(list)?|firstword|lastword|dir|notdir|suffix|basename|addsuffix|addprefix|join|wildcard|realpath|abspath|info|error|warning|shell|foreach|if|or|and|call|eval|value|file|guile)\\s'
+            'begin': '\\G(subst|patsubst|strip|findstring|filter(-out)?|sort|word(list|s)?|firstword|lastword|dir|notdir|suffix|basename|addsuffix|addprefix|join|wildcard|realpath|abspath|if|or|and|foreach|file|call|value|eval|origin|flavor|error|warning|info|shell|guile)\\s'
             'beginCaptures':
               '1':
                 'name': 'support.function.$1.makefile'
+            'contentName': 'string.implied.makefile'
             'end': '(?=\\))'
             'name': 'meta.scope.function-call.makefile'
             'patterns': [
               {
-                'include': '#variables'
+                'include': '#variable'
               }
               {
-                'include': 'source.shell#string'
+                'include': '#string'
               }
               {
                 'match': '%|\\*'
@@ -405,34 +456,80 @@
             ]
           }
           {
-            'begin': '\\G(origin|flavor)\\s(?=[^\\s)]+\\s*\\))'
+            'include': '#variable-name'
+          }
+        ]
+      }
+      {
+        'begin': '\\$\\{'
+        'captures':
+          '0':
+            'name': 'punctuation.definition.variable.makefile'
+        'end': '\\}'
+        'patterns': [
+          {
+            # automatic variable alternates
+            'match': '\\G([@*%<^+?][DF])'
+            'name': 'variable.language.makefile'
+          }
+          {
+            'begin': '\\G(subst|patsubst|strip|findstring|filter(-out)?|sort|word(list|s)?|firstword|lastword|dir|notdir|suffix|basename|addsuffix|addprefix|join|wildcard|realpath|abspath|if|or|and|foreach|file|call|value|eval|origin|flavor|error|warning|info|shell|guile)\\s'
             'beginCaptures':
               '1':
                 'name': 'support.function.$1.makefile'
-            'contentName': 'variable.other.makefile'
-            'end': '(?=\\))'
+            'contentName': 'string.implied.makefile'
+            'end': '(?=\\})'
             'name': 'meta.scope.function-call.makefile'
             'patterns': [
               {
-                'include': '#variables'
+                'include': '#variable'
               }
               {
-                'include': 'source.shell#string'
+                'include': '#string'
+              }
+              {
+                'match': '%|\\*'
+                'name': 'constant.other.placeholder.makefile'
               }
             ]
           }
           {
-            'begin': '\\G(?!\\))'
-            'end': '(?=\\))'
-            'name': 'variable.other.makefile'
-            'patterns': [
-              {
-                'include': '#variables'
-              }
-              {
-                'include': 'source.shell#string'
-              }
-            ]
+            'include': '#variable-name'
+          }
+        ]
+      }
+      {
+        'begin': '\\$(?=\\w)'
+        'captures':
+          '0':
+            'name': 'punctuation.definition.variable.makefile'
+        'end': '(?=\\W)'
+        'patterns': [
+          {
+            'include': '#variable-name'
+          }
+        ]
+      }
+    ]
+  'string':
+    'patterns': [
+      {
+        'begin': '"'
+        'end': '"'
+        'name': 'string.quoted.double.makefile'
+        'patterns': [
+          {
+            'include': '#variable'
+          }
+        ]
+      }
+      {
+        'begin': "'"
+        'end': "'"
+        'name': 'string.quoted.single.makefile'
+        'patterns': [
+          {
+            'include': '#variable'
           }
         ]
       }
