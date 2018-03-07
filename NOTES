@@ -1,0 +1,8 @@
+Added #line-continuation to make reasoning about that easier
+Added #rule to separate that logic from #recipe
+Added support for rules with inline recipes (';'-prefixed)
+Fixed #comment to *not* consume trailing newline, because that borks up any containing grammar (a comment ending a rule line used to result in the first recipe line *not* getting colorized!)
+Renamed #directives and #variables to #directive and #variable for consistency (the grammar handles an individual directive or variable, not a set of them).
+Changed directives to allow leading whitespace, since make seems to allow it.
+Removed delegation to "source.string", because Makefiles need to show *make's* handling of variable interpolation more than the shell's.  Removed "interpolation" string (backticks) for the same reason.
+Changed several 'end' regexps that consumed end-of-line ("\\n" or "^") and replaced them with look-aheads ("(?=\\n)") to fix cases where the *following* line did not get matched correctly.
